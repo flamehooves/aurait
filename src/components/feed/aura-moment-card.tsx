@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
   DotsThree,
   ChatCircle,
@@ -14,6 +15,8 @@ import {
   UserCircle,
   LinkSimple,
   Flag,
+  Play,
+  ArrowRight,
 } from "@phosphor-icons/react";
 import type { AuraMoment } from "@/types";
 import { AuraButton } from "@/components/aura/aura-button";
@@ -228,26 +231,15 @@ export function AuraMomentCard({ moment }: Props) {
         </div>
 
         {/* Media + Aura Card overlay */}
-        {moment.mediaUrl && (
+        {moment.mediaUrl && moment.mediaType !== "video" && (
           <div className="relative mb-3 overflow-hidden aspect-[4/3] bg-muted">
-            {moment.mediaType === "video" ? (
-              <video
-                src={moment.mediaUrl}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Image
-                src={moment.mediaUrl}
-                alt="Aura moment"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 600px"
-              />
-            )}
+            <Image
+              src={moment.mediaUrl}
+              alt="Aura moment"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 600px"
+            />
             {auraCard && (
               <div
                 className={cn(
@@ -259,6 +251,23 @@ export function AuraMomentCard({ moment }: Props) {
               </div>
             )}
           </div>
+        )}
+
+        {/* Video post — compact AuraBites link instead of inline video */}
+        {moment.mediaType === "video" && (
+          <Link
+            href="/aurabites"
+            className="mx-4 mb-3 flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+              <Play size={18} weight="fill" className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">Watch on AuraBites</p>
+              <p className="text-xs text-muted-foreground">Video · {moment.visibility === "public" ? "Public" : "Friends"}</p>
+            </div>
+            <ArrowRight size={15} className="text-muted-foreground flex-shrink-0" />
+          </Link>
         )}
 
         {/* Text-only Aura Card */}
