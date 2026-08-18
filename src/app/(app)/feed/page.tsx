@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Lightning, ArrowsClockwise } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -64,42 +63,55 @@ export default function FeedPage() {
         </div>
       </header>
 
-      <div className="px-4 py-4 space-y-4">
+      <div className="py-4">
         {/* Daily Opportunity */}
-        {opportunity && <AuraOpportunityCard opportunity={opportunity} userId={currentUser.id} />}
-
-        {/* Feed */}
-        {isLoading && <FeedSkeleton />}
-
-        {isError && <ErrorState onRetry={() => refetch()} />}
-
-        {!isLoading && !isError && moments?.length === 0 && (
-          <EmptyState
-            title="Your feed is quiet"
-            description="Add a few friends and their Aura moments will show up here."
-            ctaLabel="Find friends"
-            ctaHref="/friends"
-          />
-        )}
-
-        {!isLoading && !isError && (
-          <div className="space-y-4">
-            <AnimatePresence>
-              {moments?.map((moment, i) => (
-                <motion.div
-                  key={moment.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05, duration: 0.3 }}
-                >
-                  <AuraMomentCard moment={moment} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+        {opportunity && (
+          <div className="px-4 mb-4">
+            <AuraOpportunityCard opportunity={opportunity} userId={currentUser.id} />
           </div>
         )}
 
-        {/* Pull to refresh hint */}
+        {/* Feed states */}
+        {isLoading && (
+          <div className="px-4">
+            <FeedSkeleton />
+          </div>
+        )}
+
+        {isError && (
+          <div className="px-4">
+            <ErrorState onRetry={() => refetch()} />
+          </div>
+        )}
+
+        {!isLoading && !isError && moments?.length === 0 && (
+          <div className="px-4">
+            <EmptyState
+              title="Your feed is quiet"
+              description="Add a few friends and their Aura moments will show up here."
+              ctaLabel="Find friends"
+              ctaHref="/friends"
+            />
+          </div>
+        )}
+
+        {/* Moments list — no horizontal padding so images go full-width */}
+        {!isLoading && !isError && (
+          <AnimatePresence>
+            {moments?.map((moment, i) => (
+              <motion.div
+                key={moment.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.3 }}
+              >
+                <AuraMomentCard moment={moment} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
+
+        {/* Refresh hint */}
         {moments && moments.length > 0 && (
           <button
             onClick={() => refetch()}

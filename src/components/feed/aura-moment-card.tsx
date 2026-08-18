@@ -1,9 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { DotsThree, ChatCircle, Share, MapPin, Lock, Globe, Users, UserCircle } from "@phosphor-icons/react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  DotsThree,
+  ChatCircle,
+  Share,
+  MapPin,
+  Lock,
+  Globe,
+  Users,
+  UserCircle,
+  LinkSimple,
+  Flag,
+} from "@phosphor-icons/react";
 import type { AuraMoment } from "@/types";
 import { AuraButton } from "@/components/aura/aura-button";
 import { mockApi } from "@/lib/mock-api";
@@ -12,6 +23,12 @@ import { formatRelativeTime } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { AURA_CARDS } from "@/lib/constants/aura";
 import { CommentSheet } from "./comment-sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 type Props = { moment: AuraMoment };
 
@@ -42,9 +59,33 @@ const CARD_STYLES: Record<string, string> = {
   premium: "bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-black",
 };
 
+const REPORT_REASONS = [
+  "Spam or misleading",
+  "Inappropriate content",
+  "Harassment",
+  "Misinformation",
+];
+
 export function AuraMomentCard({ moment }: Props) {
   const { currentUser } = useAuraStore();
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   const auraCard = moment.auraCardId ? AURA_CARDS.find((c) => c.id === moment.auraCardId) : null;
   const VisibilityIcon = VISIBILITY_ICONS[moment.visibility];
@@ -57,15 +98,44 @@ export function AuraMomentCard({ moment }: Props) {
     await mockApi.removeAura(moment.id, currentUser.id);
   };
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/moment/${moment.id}`).catch(() => {});
+    setMenuOpen(false);
+  };
+
+  const handleShare = () => {
+    setMenuOpen(false);
+  };
+
+  const handleOpenReport = () => {
+    setMenuOpen(false);
+    setSelectedReason(null);
+    setReportOpen(true);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!selectedReason || submitting) return;
+    setSubmitting(true);
+    try {
+      await mockApi.reportMoment(moment.id, currentUser.id, selectedReason);
+      setReportOpen(false);
+      setSelectedReason(null);
+      setToastVisible(true);
+      setTimeout(() => setToastVisible(false), 3000);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <>
       <motion.article
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card rounded-2xl overflow-hidden border border-border/50 shadow-sm"
+        className="border-b border-border/20"
       >
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 pb-3">
+        <div className="flex items-center gap-3 px-4 py-3">
           <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
             {moment.author.avatarUrl ? (
               <Image
@@ -105,9 +175,51 @@ export function AuraMomentCard({ moment }: Props) {
               <span>{VISIBILITY_LABELS[moment.visibility]}</span>
             </div>
           </div>
-          <button className="text-muted-foreground hover:text-foreground transition-colors p-1 tap-target">
-            <DotsThree size={20} />
-          </button>
+
+          {/* DotsThree menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1 tap-target"
+              aria-label="More options"
+            >
+              <DotsThree size={20} weight="bold" />
+            </button>
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                  transition={{ duration: 0.12 }}
+                  className="absolute right-0 top-full mt-1 z-20 bg-popover border border-border rounded-xl shadow-lg min-w-[160px] py-1 overflow-hidden"
+                >
+                  <button
+                    onClick={handleCopyLink}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left"
+                  >
+                    <LinkSimple size={15} />
+                    Copy link
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left"
+                  >
+                    <Share size={15} />
+                    Share
+                  </button>
+                  <div className="h-px bg-border/60 mx-2 my-0.5" />
+                  <button
+                    onClick={handleOpenReport}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left text-destructive"
+                  >
+                    <Flag size={15} />
+                    Report
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Caption */}
@@ -115,16 +227,27 @@ export function AuraMomentCard({ moment }: Props) {
           <p className="text-sm leading-relaxed">{moment.caption}</p>
         </div>
 
-        {/* Media + Aura Card */}
+        {/* Media + Aura Card overlay */}
         {moment.mediaUrl && (
-          <div className="relative mx-4 mb-3 rounded-xl overflow-hidden aspect-[4/3] bg-muted">
-            <Image
-              src={moment.mediaUrl}
-              alt="Aura moment"
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 600px"
-            />
+          <div className="relative mb-3 overflow-hidden aspect-[4/3] bg-muted">
+            {moment.mediaType === "video" ? (
+              <video
+                src={moment.mediaUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Image
+                src={moment.mediaUrl}
+                alt="Aura moment"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 600px"
+              />
+            )}
             {auraCard && (
               <div
                 className={cn(
@@ -153,7 +276,7 @@ export function AuraMomentCard({ moment }: Props) {
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-3 px-4 py-3 border-t border-border/40">
+        <div className="flex items-center gap-3 px-4 py-3">
           <AuraButton
             auraCount={moment.auraCount}
             hasGiven={moment.hasGivenAura}
@@ -179,11 +302,65 @@ export function AuraMomentCard({ moment }: Props) {
         </div>
       </motion.article>
 
+      {/* Report Sheet */}
+      <Sheet open={reportOpen} onOpenChange={(o) => !o && setReportOpen(false)}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader className="pb-2">
+            <SheetTitle>Report this moment</SheetTitle>
+          </SheetHeader>
+          <div className="px-4 pb-2 space-y-2">
+            {REPORT_REASONS.map((reason) => (
+              <button
+                key={reason}
+                onClick={() => setSelectedReason(reason)}
+                className={cn(
+                  "w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors",
+                  selectedReason === reason
+                    ? "border-primary bg-primary/10 text-primary font-medium"
+                    : "border-border/60 hover:bg-muted text-foreground"
+                )}
+              >
+                {reason}
+              </button>
+            ))}
+          </div>
+          <div className="px-4 pb-6 pt-2">
+            <button
+              onClick={handleSubmitReport}
+              disabled={!selectedReason || submitting}
+              className={cn(
+                "w-full py-3 rounded-xl text-sm font-semibold transition-colors",
+                selectedReason && !submitting
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-muted text-muted-foreground cursor-not-allowed"
+              )}
+            >
+              {submitting ? "Submitting…" : "Submit report"}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Comment sheet */}
       <CommentSheet
         momentId={moment.id}
         open={commentsOpen}
         onClose={() => setCommentsOpen(false)}
       />
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toastVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background px-5 py-2.5 rounded-2xl text-sm font-medium shadow-lg whitespace-nowrap pointer-events-none"
+          >
+            Report submitted
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

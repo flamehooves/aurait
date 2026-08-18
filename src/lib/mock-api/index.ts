@@ -36,6 +36,9 @@ function randomDelay() {
   return delay(250 + Math.random() * 500);
 }
 
+// In-memory reports tracker: Map<momentId, Set<userId>>
+const momentReports = new Map<string, Set<string>>();
+
 // In-memory mutable state
 let moments = [...MOCK_MOMENTS];
 let notifications = [...MOCK_NOTIFICATIONS];
@@ -302,5 +305,48 @@ export const mockApi = {
   async getUserMoments(userId: string): Promise<AuraMoment[]> {
     await randomDelay();
     return moments.filter((m) => m.authorId === userId).slice(0, 10);
+  },
+
+  async reportMoment(momentId: string, userId: string, reason: string): Promise<void> {
+    await randomDelay();
+    if (!momentReports.has(momentId)) {
+      momentReports.set(momentId, new Set());
+    }
+    momentReports.get(momentId)!.add(userId);
+    const reportCount = momentReports.get(momentId)!.size;
+    moments = moments.map((m) => {
+      if (m.id !== momentId) return m;
+      const newStatus: AuraMoment["status"] =
+        reportCount >= 2 ? "under_moderation" : m.status;
+      return { ...m, reportCount, status: newStatus };
+    });
+  },
+
+  async getVideoFeed(): Promise<AuraMoment[]> {
+    await randomDelay();
+    return [...moments]
+      .filter(
+        (m) =>
+          m.mediaType === "video" &&
+          m.visibility === "public" &&
+          m.status !== "under_moderation"
+      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  async getModerationQueue(): Promise<AuraMoment[]> {
+    await randomDelay();
+    return moments.filter((m) => m.status === "under_moderation");
+  },
+
+  async moderateContent(momentId: string, action: "restore" | "remove"): Promise<void> {
+    await randomDelay();
+    moments = moments.map((m) => {
+      if (m.id !== momentId) return m;
+      return {
+        ...m,
+        status: action === "restore" ? ("active" as const) : ("removed" as const),
+      };
+    });
   },
 };

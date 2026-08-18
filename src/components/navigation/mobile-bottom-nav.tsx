@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Users, Plus, Lightning, User } from "@phosphor-icons/react";
+import { House, Play, Plus, Lightning, User } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/feed", icon: House, label: "Home" },
-  { href: "/friends", icon: Users, label: "Friends" },
+  { href: "/aurabites", icon: Play, label: "Bites" },
   { href: "/create", icon: Plus, label: "Create", isCreate: true },
   { href: "/aura", icon: Lightning, label: "Aura" },
   { href: "/profile", icon: User, label: "You" },

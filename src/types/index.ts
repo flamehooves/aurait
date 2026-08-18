@@ -60,6 +60,8 @@ export type AuraMoment = {
   hasGivenAura: boolean;
   location?: string;
   createdAt: string;
+  reportCount?: number;
+  status?: "active" | "under_moderation" | "removed";
 };
 
 export type AuraInteraction = {

@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Users, Plus, Lightning, User, Bell, Gear } from "@phosphor-icons/react";
+import {
+  House,
+  Users,
+  Plus,
+  Lightning,
+  User,
+  Bell,
+  Gear,
+  Play,
+  ShieldCheck,
+} from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuraStore } from "@/stores/aura-store";
@@ -11,10 +21,12 @@ import { formatAura } from "@/lib/utils/format";
 const NAV_ITEMS = [
   { href: "/feed", icon: House, label: "Home" },
   { href: "/friends", icon: Users, label: "Friends" },
+  { href: "/aurabites", icon: Play, label: "AuraBites" },
   { href: "/create", icon: Plus, label: "Create", isCreate: true },
   { href: "/aura", icon: Lightning, label: "Aura" },
   { href: "/notifications", icon: Bell, label: "Notifications" },
   { href: "/profile", icon: User, label: "Profile" },
+  { href: "/moderation", icon: ShieldCheck, label: "Moderation" },
   { href: "/settings", icon: Gear, label: "Settings" },
 ];
 
