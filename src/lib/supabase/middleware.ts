@@ -26,25 +26,10 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const isAppRoute = request.nextUrl.pathname.startsWith("/feed") ||
-    request.nextUrl.pathname.startsWith("/aura") ||
-    request.nextUrl.pathname.startsWith("/challenges") ||
-    request.nextUrl.pathname.startsWith("/leaderboard") ||
-    request.nextUrl.pathname.startsWith("/notifications") ||
-    request.nextUrl.pathname.startsWith("/friends") ||
-    request.nextUrl.pathname.startsWith("/profile") ||
-    request.nextUrl.pathname.startsWith("/settings") ||
-    request.nextUrl.pathname.startsWith("/create");
-
-  if (!user && isAppRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
+  // Refresh the session token so it doesn't expire mid-visit.
+  // Phase 1: do NOT redirect — the app is demo-first with mock data.
+  // Route protection will be added in Phase 2 when data is real.
+  await supabase.auth.getUser();
 
   return supabaseResponse;
 }
