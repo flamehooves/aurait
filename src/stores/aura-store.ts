@@ -6,13 +6,14 @@ import type { DemoPersona, UserProfile, AuraOpportunity } from "@/types";
 import { DEMO_USERS } from "@/lib/mock-data/users";
 
 type AuraStore = {
-  activePersona: DemoPersona;
+  activePersona: DemoPersona | "real";
   currentUser: UserProfile;
   auraScore: number;
   streakCurrent: number;
   celebratingAura: boolean;
   celebrationAmount: number;
   setPersona: (persona: DemoPersona) => void;
+  setRealUser: (user: UserProfile) => void;
   incrementAura: (amount: number) => void;
   triggerCelebration: (amount: number) => void;
   dismissCelebration: () => void;
@@ -33,6 +34,15 @@ export const useAuraStore = create<AuraStore>()(
         const user = DEMO_USERS[persona];
         set({
           activePersona: persona,
+          currentUser: user,
+          auraScore: user.auraScore,
+          streakCurrent: user.streakCurrent,
+        });
+      },
+
+      setRealUser: (user) => {
+        set({
+          activePersona: "real",
           currentUser: user,
           auraScore: user.auraScore,
           streakCurrent: user.streakCurrent,
