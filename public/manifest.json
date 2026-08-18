@@ -4,7 +4,7 @@
   "description": "Do good. Build Aura.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#0a0614",
   "theme_color": "#8b5cf6",
   "orientation": "portrait",
   "icons": [
