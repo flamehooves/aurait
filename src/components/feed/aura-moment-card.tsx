@@ -17,6 +17,7 @@ import {
   Flag,
   Play,
   ArrowRight,
+  ArrowLeft,
   X,
 } from "@phosphor-icons/react";
 import type { AuraMoment } from "@/types";
@@ -64,15 +65,36 @@ const REPORT_REASONS = [
   "Misinformation",
 ];
 
+const glassStyle = {
+  backdropFilter: "blur(28px) saturate(1.8)",
+  WebkitBackdropFilter: "blur(28px) saturate(1.8)",
+  background: "var(--glass-bg)",
+  border: "1px solid var(--glass-border)",
+  boxShadow: "var(--glass-shadow)",
+} as const;
+
 export function AuraMomentCard({ moment }: Props) {
   const { currentUser } = useAuraStore();
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownView, setDropdownView] = useState<"main" | "report">("main");
   const [reportOpen, setReportOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) setDropdownView("main");
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -106,9 +128,14 @@ export function AuraMomentCard({ moment }: Props) {
   };
 
   const handleOpenReport = () => {
-    setMenuOpen(false);
-    setSelectedReason(null);
-    setReportOpen(true);
+    if (isMobile) {
+      setMenuOpen(false);
+      setSelectedReason(null);
+      setReportOpen(true);
+    } else {
+      setSelectedReason(null);
+      setDropdownView("report");
+    }
   };
 
   const handleSubmitReport = async () => {
@@ -117,6 +144,7 @@ export function AuraMomentCard({ moment }: Props) {
     try {
       await mockApi.reportMoment(moment.id, currentUser.id, selectedReason);
       setReportOpen(false);
+      setMenuOpen(false);
       setSelectedReason(null);
       setToastVisible(true);
       setTimeout(() => setToastVisible(false), 3000);
@@ -186,48 +214,125 @@ export function AuraMomentCard({ moment }: Props) {
             <AnimatePresence>
               {menuOpen && (
                 <motion.div
+                  layout
                   initial={{ opacity: 0, scale: 0.92, y: -6 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: -6 }}
                   transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                  className="absolute right-0 top-full mt-2 z-20 min-w-[172px] py-1.5 rounded-2xl overflow-hidden"
-                  style={{
-                    backdropFilter: "blur(28px) saturate(1.8)",
-                    WebkitBackdropFilter: "blur(28px) saturate(1.8)",
-                    background: "var(--glass-bg)",
-                    border: "1px solid var(--glass-border)",
-                    boxShadow: "var(--glass-shadow)",
-                  }}
+                  className="absolute right-0 top-full mt-2 z-20 rounded-2xl overflow-hidden"
+                  style={glassStyle}
                 >
-                  <button
-                    onClick={handleCopyLink}
-                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-foreground"
-                    style={{ ["--hover-bg" as string]: "transparent" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <LinkSimple size={15} className="opacity-70" />
-                    Copy link
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-foreground"
-                    onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <Share size={15} className="opacity-70" />
-                    Share
-                  </button>
-                  <div className="mx-3 my-1" style={{ height: "1px", background: "var(--glass-divider)" }} />
-                  <button
-                    onClick={handleOpenReport}
-                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-destructive"
-                    onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <Flag size={15} className="opacity-80" />
-                    Report
-                  </button>
+                  <AnimatePresence mode="wait" initial={false}>
+                    {dropdownView === "main" ? (
+                      <motion.div
+                        key="main"
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -8 }}
+                        transition={{ duration: 0.12 }}
+                        className="py-1.5 min-w-[172px]"
+                      >
+                        <button
+                          onClick={handleCopyLink}
+                          className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-foreground"
+                          onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <LinkSimple size={15} className="opacity-70" />
+                          Copy link
+                        </button>
+                        <button
+                          onClick={handleShare}
+                          className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-foreground"
+                          onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <Share size={15} className="opacity-70" />
+                          Share
+                        </button>
+                        <div className="mx-3 my-1" style={{ height: "1px", background: "var(--glass-divider)" }} />
+                        <button
+                          onClick={handleOpenReport}
+                          className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-destructive"
+                          onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <Flag size={15} className="opacity-80" />
+                          Report
+                        </button>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="report"
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 8 }}
+                        transition={{ duration: 0.12 }}
+                        className="min-w-[240px]"
+                      >
+                        {/* Back + title */}
+                        <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                          <button
+                            onClick={() => setDropdownView("main")}
+                            className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg"
+                            onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                            aria-label="Back"
+                          >
+                            <ArrowLeft size={14} />
+                          </button>
+                          <span className="text-sm font-semibold">Report this moment</span>
+                        </div>
+                        <div className="mx-3 mb-1" style={{ height: "1px", background: "var(--glass-divider)" }} />
+                        {/* Reasons */}
+                        {REPORT_REASONS.map((reason) => (
+                          <button
+                            key={reason}
+                            onClick={() => setSelectedReason(reason)}
+                            className={cn(
+                              "flex items-center w-full px-4 py-2.5 text-sm transition-colors text-left",
+                              selectedReason === reason
+                                ? "text-primary font-medium"
+                                : "text-foreground"
+                            )}
+                            onMouseEnter={e => selectedReason !== reason && (e.currentTarget.style.background = "var(--glass-hover)")}
+                            onMouseLeave={e => selectedReason !== reason && (e.currentTarget.style.background = "transparent")}
+                          >
+                            <span
+                              className={cn(
+                                "w-4 h-4 rounded-full border mr-2.5 flex-shrink-0 flex items-center justify-center transition-colors",
+                                selectedReason === reason
+                                  ? "border-primary bg-primary"
+                                  : "border-border"
+                              )}
+                            >
+                              {selectedReason === reason && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />
+                              )}
+                            </span>
+                            {reason}
+                          </button>
+                        ))}
+                        <div className="mx-3 mt-1" style={{ height: "1px", background: "var(--glass-divider)" }} />
+                        {/* Submit */}
+                        <div className="p-2.5">
+                          <button
+                            onClick={handleSubmitReport}
+                            disabled={!selectedReason || submitting}
+                            className={cn(
+                              "w-full py-2 rounded-xl text-sm font-semibold transition-colors",
+                              selectedReason && !submitting
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                : "text-muted-foreground cursor-not-allowed"
+                            )}
+                            style={!selectedReason || submitting ? { background: "var(--glass-hover)" } : {}}
+                          >
+                            {submitting ? "Submitting…" : "Submit report"}
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -320,87 +425,83 @@ export function AuraMomentCard({ moment }: Props) {
         </div>
       </motion.article>
 
-      {/* Report bottom sheet — glass */}
-      <AnimatePresence>
-        {reportOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/30"
-              style={{ backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
-              onClick={() => setReportOpen(false)}
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe overflow-hidden"
-              style={{
-                backdropFilter: "blur(28px) saturate(1.8)",
-                WebkitBackdropFilter: "blur(28px) saturate(1.8)",
-                background: "var(--glass-bg)",
-                border: "1px solid var(--glass-border)",
-                boxShadow: "var(--glass-shadow)",
-              }}
-            >
-              {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-9 h-1 rounded-full" style={{ background: "var(--glass-divider)" }} />
-              </div>
-              {/* Header */}
-              <div className="px-5 pt-2 pb-3 flex items-center justify-between">
-                <h2 className="text-base font-semibold">Report this moment</h2>
-                <button
-                  onClick={() => setReportOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                  style={{ background: "var(--glass-hover)" }}
-                  aria-label="Close"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              {/* Reasons */}
-              <div className="px-4 pb-3 space-y-2">
-                {REPORT_REASONS.map((reason) => (
+      {/* Report bottom sheet — mobile only */}
+      {isMobile && (
+        <AnimatePresence>
+          {reportOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-40 bg-black/30"
+                style={{ backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
+                onClick={() => setReportOpen(false)}
+              />
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe overflow-hidden"
+                style={glassStyle}
+              >
+                {/* Drag handle */}
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="w-9 h-1 rounded-full" style={{ background: "var(--glass-divider)" }} />
+                </div>
+                {/* Header */}
+                <div className="px-5 pt-2 pb-3 flex items-center justify-between">
+                  <h2 className="text-base font-semibold">Report this moment</h2>
                   <button
-                    key={reason}
-                    onClick={() => setSelectedReason(reason)}
-                    className={cn(
-                      "w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors",
-                      selectedReason === reason
-                        ? "border-primary bg-primary/10 text-primary font-medium"
-                        : "border-border/40 text-foreground"
-                    )}
-                    onMouseEnter={e => selectedReason !== reason && (e.currentTarget.style.background = "var(--glass-hover)")}
-                    onMouseLeave={e => selectedReason !== reason && (e.currentTarget.style.background = "transparent")}
+                    onClick={() => setReportOpen(false)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                    style={{ background: "var(--glass-hover)" }}
+                    aria-label="Close"
                   >
-                    {reason}
+                    <X size={16} />
                   </button>
-                ))}
-              </div>
-              {/* Submit */}
-              <div className="px-4 pb-8 pt-1">
-                <button
-                  onClick={handleSubmitReport}
-                  disabled={!selectedReason || submitting}
-                  className={cn(
-                    "w-full py-3 rounded-xl text-sm font-semibold transition-colors",
-                    selectedReason && !submitting
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : "bg-muted text-muted-foreground cursor-not-allowed"
-                  )}
-                >
-                  {submitting ? "Submitting…" : "Submit report"}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                </div>
+                {/* Reasons */}
+                <div className="px-4 pb-3 space-y-2">
+                  {REPORT_REASONS.map((reason) => (
+                    <button
+                      key={reason}
+                      onClick={() => setSelectedReason(reason)}
+                      className={cn(
+                        "w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors",
+                        selectedReason === reason
+                          ? "border-primary bg-primary/10 text-primary font-medium"
+                          : "border-border/40 text-foreground"
+                      )}
+                      onMouseEnter={e => selectedReason !== reason && (e.currentTarget.style.background = "var(--glass-hover)")}
+                      onMouseLeave={e => selectedReason !== reason && (e.currentTarget.style.background = "transparent")}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+                {/* Submit */}
+                <div className="px-4 pb-8 pt-1">
+                  <button
+                    onClick={handleSubmitReport}
+                    disabled={!selectedReason || submitting}
+                    className={cn(
+                      "w-full py-3 rounded-xl text-sm font-semibold transition-colors",
+                      selectedReason && !submitting
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                    )}
+                  >
+                    {submitting ? "Submitting…" : "Submit report"}
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      )}
 
       {/* Comment sheet */}
       <CommentSheet

@@ -50,11 +50,11 @@
   --header-height: 3.5rem;
 
   /* Liquid glass — light mode */
-  --glass-bg: rgba(255, 255, 255, 0.78);
-  --glass-border: rgba(255, 255, 255, 0.75);
-  --glass-shadow: 0 2px 12px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.90);
+  --glass-bg: rgba(252, 252, 255, 0.96);
+  --glass-border: rgba(200, 200, 220, 0.60);
+  --glass-shadow: 0 2px 16px rgba(0,0,0,0.10), 0 8px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,1);
   --glass-hover: rgba(0, 0, 0, 0.05);
-  --glass-divider: rgba(0, 0, 0, 0.10);
+  --glass-divider: rgba(0, 0, 0, 0.08);
 }
 
 /* Dark theme */
@@ -81,16 +81,24 @@
   --input: oklch(22% 0.015 250);
 
   /* Liquid glass — dark mode */
-  --glass-bg: rgba(18, 14, 30, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.09);
-  --glass-shadow: 0 2px 12px rgba(0,0,0,0.30), 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
+  --glass-bg: rgba(22, 18, 40, 0.94);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 2px 16px rgba(0,0,0,0.40), 0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
   --glass-hover: rgba(255, 255, 255, 0.07);
-  --glass-divider: rgba(255, 255, 255, 0.09);
+  --glass-divider: rgba(255, 255, 255, 0.08);
 }
 
 * {
   box-sizing: border-box;
   border-color: var(--border);
+}
+
+/* Ensure Sheet/Dialog popups always have a solid background.
+   bg-popover Tailwind utility doesn't resolve in v4 without @theme mapping. */
+[data-slot="sheet-content"],
+[data-slot="dialog-content"] {
+  background: var(--popover);
+  color: var(--popover-foreground);
 }
 
 html {
