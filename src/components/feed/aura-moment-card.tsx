@@ -191,32 +191,46 @@ export function AuraMomentCard({ moment }: Props) {
             <AnimatePresence>
               {menuOpen && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                  initial={{ opacity: 0, scale: 0.92, y: -6 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                  transition={{ duration: 0.12 }}
-                  className="absolute right-0 top-full mt-1 z-20 bg-popover border border-border rounded-xl shadow-lg min-w-[160px] py-1 overflow-hidden"
+                  exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                  transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                  className="absolute right-0 top-full mt-2 z-20 min-w-[172px] py-1.5 rounded-2xl overflow-hidden"
+                  style={{
+                    backdropFilter: "blur(28px) saturate(1.8)",
+                    WebkitBackdropFilter: "blur(28px) saturate(1.8)",
+                    background: "var(--glass-bg)",
+                    border: "1px solid var(--glass-border)",
+                    boxShadow: "var(--glass-shadow)",
+                  }}
                 >
                   <button
                     onClick={handleCopyLink}
-                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left"
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-foreground"
+                    style={{ ["--hover-bg" as string]: "transparent" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
-                    <LinkSimple size={15} />
+                    <LinkSimple size={15} className="opacity-70" />
                     Copy link
                   </button>
                   <button
                     onClick={handleShare}
-                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left"
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-foreground"
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
-                    <Share size={15} />
+                    <Share size={15} className="opacity-70" />
                     Share
                   </button>
-                  <div className="h-px bg-border/60 mx-2 my-0.5" />
+                  <div className="mx-3 my-1" style={{ height: "1px", background: "var(--glass-divider)" }} />
                   <button
                     onClick={handleOpenReport}
-                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left text-destructive"
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors text-left font-medium text-destructive"
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--glass-hover)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
-                    <Flag size={15} />
+                    <Flag size={15} className="opacity-80" />
                     Report
                   </button>
                 </motion.div>
