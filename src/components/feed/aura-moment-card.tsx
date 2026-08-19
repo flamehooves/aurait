@@ -17,6 +17,7 @@ import {
   Flag,
   Play,
   ArrowRight,
+  X,
 } from "@phosphor-icons/react";
 import type { AuraMoment } from "@/types";
 import { AuraButton } from "@/components/aura/aura-button";
@@ -26,12 +27,6 @@ import { formatRelativeTime } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { AURA_CARDS } from "@/lib/constants/aura";
 import { CommentSheet } from "./comment-sheet";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 
 type Props = { moment: AuraMoment };
 
@@ -325,44 +320,87 @@ export function AuraMomentCard({ moment }: Props) {
         </div>
       </motion.article>
 
-      {/* Report Sheet */}
-      <Sheet open={reportOpen} onOpenChange={(o) => !o && setReportOpen(false)}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
-          <SheetHeader className="pb-2">
-            <SheetTitle>Report this moment</SheetTitle>
-          </SheetHeader>
-          <div className="px-4 pb-2 space-y-2">
-            {REPORT_REASONS.map((reason) => (
-              <button
-                key={reason}
-                onClick={() => setSelectedReason(reason)}
-                className={cn(
-                  "w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors",
-                  selectedReason === reason
-                    ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border/60 hover:bg-muted text-foreground"
-                )}
-              >
-                {reason}
-              </button>
-            ))}
-          </div>
-          <div className="px-4 pb-6 pt-2">
-            <button
-              onClick={handleSubmitReport}
-              disabled={!selectedReason || submitting}
-              className={cn(
-                "w-full py-3 rounded-xl text-sm font-semibold transition-colors",
-                selectedReason && !submitting
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "bg-muted text-muted-foreground cursor-not-allowed"
-              )}
+      {/* Report bottom sheet — glass */}
+      <AnimatePresence>
+        {reportOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/30"
+              style={{ backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
+              onClick={() => setReportOpen(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe overflow-hidden"
+              style={{
+                backdropFilter: "blur(28px) saturate(1.8)",
+                WebkitBackdropFilter: "blur(28px) saturate(1.8)",
+                background: "var(--glass-bg)",
+                border: "1px solid var(--glass-border)",
+                boxShadow: "var(--glass-shadow)",
+              }}
             >
-              {submitting ? "Submitting…" : "Submit report"}
-            </button>
-          </div>
-        </SheetContent>
-      </Sheet>
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-9 h-1 rounded-full" style={{ background: "var(--glass-divider)" }} />
+              </div>
+              {/* Header */}
+              <div className="px-5 pt-2 pb-3 flex items-center justify-between">
+                <h2 className="text-base font-semibold">Report this moment</h2>
+                <button
+                  onClick={() => setReportOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  style={{ background: "var(--glass-hover)" }}
+                  aria-label="Close"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              {/* Reasons */}
+              <div className="px-4 pb-3 space-y-2">
+                {REPORT_REASONS.map((reason) => (
+                  <button
+                    key={reason}
+                    onClick={() => setSelectedReason(reason)}
+                    className={cn(
+                      "w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors",
+                      selectedReason === reason
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border/40 text-foreground"
+                    )}
+                    onMouseEnter={e => selectedReason !== reason && (e.currentTarget.style.background = "var(--glass-hover)")}
+                    onMouseLeave={e => selectedReason !== reason && (e.currentTarget.style.background = "transparent")}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+              {/* Submit */}
+              <div className="px-4 pb-8 pt-1">
+                <button
+                  onClick={handleSubmitReport}
+                  disabled={!selectedReason || submitting}
+                  className={cn(
+                    "w-full py-3 rounded-xl text-sm font-semibold transition-colors",
+                    selectedReason && !submitting
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  )}
+                >
+                  {submitting ? "Submitting…" : "Submit report"}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Comment sheet */}
       <CommentSheet
